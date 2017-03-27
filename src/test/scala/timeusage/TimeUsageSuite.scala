@@ -82,4 +82,41 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
     assert(u(4) === 0.2)
     assert(u(5) === 11.1)
   }
+
+  test("timeUsageSummaryTyped") {
+    val (columns, initDf) = read("/timeusage/atussum.csv")
+    val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
+    val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
+    val summaryDs = timeUsageSummaryTyped(summaryDf)
+
+    //summaryDf.orderBy($"primaryNeeds".desc, $"work".desc, $"other".desc).show()
+
+    val u = summaryDs.orderBy($"primaryNeeds".desc, $"work".desc, $"other".desc).first()
+
+    assert(u.working === "not working")
+    assert(u.sex === "female")
+    assert(u.age === "active")
+    assert(u.primaryNeeds === 24.0)
+    assert(u.working === 0.0)
+    assert(u.other === 0.0)
+  }
+
+  test("timeUsageGroupedTyped") {
+    val (columns, initDf) = read("/timeusage/atussum.csv")
+    val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
+    val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
+    val summaryDs = timeUsageSummaryTyped(summaryDf)
+    val finalDf = timeUsageGroupedTyped(summaryDs)
+
+
+    //finalDf.orderBy($"primaryNeeds".desc, $"work".desc, $"other".desc).show()
+    val u = finalDf.orderBy($"primaryNeeds".desc, $"work".desc, $"other".desc).first()
+
+    assert(u.working === "not working")
+    assert(u.sex === "female")
+    assert(u.age === "young")
+    assert(u.primaryNeeds === 12.5)
+    assert(u.work === 0.2)
+    assert(u.other === 11.1)
+  }
 }

@@ -229,7 +229,16 @@ object TimeUsage {
     * cast them at the same time.
     */
   def timeUsageSummaryTyped(timeUsageSummaryDf: DataFrame): Dataset[TimeUsageRow] =
-    ???
+    timeUsageSummaryDf.map(
+      row => TimeUsageRow(
+        row.getAs[String]("working"),
+        row.getAs[String]("sex"),
+        row.getAs[String]("age"),
+        row.getAs[Double]("primaryNeeds"),
+        row.getAs[Double]("work"),
+        row.getAs[Double]("other")
+      )
+    )
 
   /**
     * @return Same as `timeUsageGrouped`, but using the typed API when possible
@@ -244,7 +253,16 @@ object TimeUsage {
     */
   def timeUsageGroupedTyped(summed: Dataset[TimeUsageRow]): Dataset[TimeUsageRow] = {
     import org.apache.spark.sql.expressions.scalalang.typed
-    ???
+    summed
+      .groupByKey(t => (t.working, t.sex, t.age))
+      .agg(
+        round(avg($"primaryNeeds"), 1).as("primaryNeeds").as[Double],
+        round(avg($"work"), 1).as("work").as[Double],
+        round(avg($"other"), 1).as("other").as[Double]
+      )
+      .map{ // TODO Do I need to map? Is this the right way?
+        case (k, primaryNeeds, work, other) => TimeUsageRow(k._1, k._2, k._3, primaryNeeds, work, other)
+      }
   }
 }
 
