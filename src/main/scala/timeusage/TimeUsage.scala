@@ -72,8 +72,10 @@ object TimeUsage {
   /** @return An RDD Row compatible with the schema produced by `dfSchema`
     * @param line Raw fields
     */
-  def row(line: List[String]): Row =
-    Row(line)
+  def row(line: List[String]): Row = {
+    val fieldList: List[Any] = line.head :: line.tail.map(_.toInt)
+    Row(fieldList)
+  }
 
   /** @return The initial data frame columns partitioned in three groups: primary needs (sleeping, eating, etc.),
     *         work and other (leisure activities)
@@ -91,7 +93,25 @@ object TimeUsage {
     *    “t10”, “t12”, “t13”, “t14”, “t15”, “t16” and “t18” (those which are not part of the previous groups only).
     */
   def classifiedColumns(columnNames: List[String]): (List[Column], List[Column], List[Column]) = {
-    ???
+    val primaryNeedsActivitiesPrefixes = List("t01", "t03", "t11", "t1801", "t1803");
+    val workingActivitiesPrefixes = List("t05", "t1805");
+    val otherActivitiesPrefixes =
+      List("t02", "t04", "t06", "t07", "t08", "t09", "t10", "t12", "t13", "t14", "t15", "t16", "t18");
+
+    def stringIsPrefixedWith(s: String, prefixes: List[String]): Boolean = prefixes match {
+      case Nil => false
+      case p :: ps =>
+        if (s.startsWith(p)) true else stringIsPrefixedWith(s, ps)
+    }
+
+    val primaryNeeds = columnNames.filter(stringIsPrefixedWith(_, primaryNeedsActivitiesPrefixes)).map(col(_))
+    val working = columnNames.filter(stringIsPrefixedWith(_, workingActivitiesPrefixes)).map(col(_))
+    val other = columnNames
+      .filter(stringIsPrefixedWith(_, otherActivitiesPrefixes))
+      .filter(!stringIsPrefixedWith(_, primaryNeedsActivitiesPrefixes))
+      .filter(!stringIsPrefixedWith(_, workingActivitiesPrefixes)).map(col(_))
+
+    (primaryNeeds, working, other)
   }
 
   /** @return a projection of the initial DataFrame such that all columns containing hours spent on primary needs
