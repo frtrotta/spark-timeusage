@@ -23,14 +23,34 @@ object TimeUsage {
 
   /** Main function */
   def main(args: Array[String]): Unit = {
-    timeUsageByLifePeriod()
+    val (columns, initDf) = read("/timeusage/atussum.csv")
+    val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
+    val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
+    val finalDf = timeUsageGrouped(summaryDf).sort($"age", $"sex", $"working")
+    timed("1: timeUsageGrouped", finalDf.collect())
+    timed("2: timeUsageGroupedSql", timeUsageGroupedSql(summaryDf).collect())
+    val summaryDs = timeUsageSummaryTyped(summaryDf)
+    timed("3: timeUsageGroupedTyped", timeUsageGroupedTyped(summaryDs).collect())
+
+    //timeUsageByLifePeriod()
+    finalDf.show()
+    println(timing)
+  }
+
+  val timing = new StringBuffer
+  def timed[T](label: String, code: => T): T = {
+    val start = System.currentTimeMillis()
+    val result = code
+    val stop = System.currentTimeMillis()
+    timing.append(s"Processing $label took ${stop - start} ms.\n")
+    result
   }
 
   def timeUsageByLifePeriod(): Unit = {
     val (columns, initDf) = read("/timeusage/atussum.csv")
     val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
     val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
-    val finalDf = timeUsageGrouped(summaryDf)
+    val finalDf = timeUsageGrouped(summaryDf).sort($"age", $"sex", $"working")
     finalDf.show()
   }
 
