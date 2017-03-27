@@ -63,7 +63,7 @@ object TimeUsage {
     * @param columnNames Column names of the DataFrame
     */
   def dfSchema(columnNames: List[String]): StructType = {
-    val structFieldList = StructField(columnNames.head, StringType, false) :: columnNames.tail.map(StructField(_, IntegerType, false))
+    val structFieldList = StructField(columnNames.head, StringType, false) :: columnNames.tail.map(StructField(_, DoubleType, false))
     StructType(structFieldList)
   }
 
@@ -73,7 +73,7 @@ object TimeUsage {
     * @param line Raw fields
     */
   def row(line: List[String]): Row = {
-    val fieldList: List[Any] = line.head :: line.tail.map(_.toInt)
+    val fieldList: List[Any] = line.head :: line.tail.map(_.toDouble)
     Row.fromSeq(fieldList)
   }
 
@@ -150,9 +150,11 @@ object TimeUsage {
     otherColumns: List[Column],
     df: DataFrame
   ): DataFrame = {
-    val workingStatusProjection: Column = col("telfs") as "working"
-    val sexProjection: Column = col("tesex") as "sex"
-    val ageProjection: Column = col("teage") as "age"
+    val workingStatusProjection: Column = when(col("telfs") < 3, "working")
+      .otherwise("not working") as "working"
+    val sexProjection: Column = when(col("tesex") === 1, "male").otherwise("female") as "sex"
+    val ageProjection: Column = when(col("teage") <= 22, "young")
+    .when(col("teage") <= 55, "active").otherwise("elder")  as "age"
 
     val primaryNeedsProjection: Column = primaryNeedsColumns.reduce(_+_) / lit("60") as "primaryNeeds"
     val workProjection: Column = workColumns.reduce(_+_) / lit("60") as "work"

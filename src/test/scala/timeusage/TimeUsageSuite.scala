@@ -37,6 +37,15 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
     val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
     val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
 
-    summaryDf.show()
+    //summaryDf.show()
+
+    val u = summaryDf.first()
+
+    assert(u(0) === "working")
+    assert(u(1) === "male")
+    assert(u(2) === "elder")
+    assert((u.getDouble(3) - 15.25).abs < 0.1)
+    assert((u.getDouble(4) - 0).abs < 0.1)
+    assert((u.getDouble(5) - 8.75).abs < 0.1)
   }
 }
