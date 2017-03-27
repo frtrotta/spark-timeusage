@@ -5,7 +5,7 @@ import org.apache.spark.sql.types.{DoubleType, StringType, StructField, StructTy
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import timeusage.TimeUsage.{classifiedColumns, read}
+import timeusage.TimeUsage.{classifiedColumns, read, timeUsageSummary}
 
 import scala.util.Random
 
@@ -25,11 +25,18 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
     assert(instantiatable, "Can't instantiate a TimeUsage object")
   }
 
-  test("classifiedColumns") {
-    val (columns, _) = read("/timeusage/atussum.csv")
-    val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
+  test("row") {
+    val r = TimeUsage.row(List("string", "1", "2"))
+    assert(r(0) === "string")
+    assert(r(1) === 1)
+    assert(r(2) === 2)
+  }
 
-    // assert(columns.size === (primaryNeedsColumns.size + workColumns.size + otherColumns.size))
-    assert(true)
+  test("timeUsageSummary") {
+    val (columns, initDf) = read("/timeusage/atussum.csv")
+    val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
+    val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
+
+    summaryDf.show()
   }
 }

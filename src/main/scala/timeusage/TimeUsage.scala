@@ -74,7 +74,7 @@ object TimeUsage {
     */
   def row(line: List[String]): Row = {
     val fieldList: List[Any] = line.head :: line.tail.map(_.toInt)
-    Row(fieldList)
+    Row.fromSeq(fieldList)
   }
 
   /** @return The initial data frame columns partitioned in three groups: primary needs (sleeping, eating, etc.),
@@ -150,13 +150,15 @@ object TimeUsage {
     otherColumns: List[Column],
     df: DataFrame
   ): DataFrame = {
-    val workingStatusProjection: Column = ???
-    val sexProjection: Column = ???
-    val ageProjection: Column = ???
+    val workingStatusProjection: Column = col("telfs") as "working"
+    val sexProjection: Column = col("tesex") as "sex"
+    val ageProjection: Column = col("teage") as "age"
 
-    val primaryNeedsProjection: Column = ???
-    val workProjection: Column = ???
-    val otherProjection: Column = ???
+    val primaryNeedsProjection: Column = primaryNeedsColumns.reduce(_+_) / lit("60") as "primaryNeeds"
+    val workProjection: Column = workColumns.reduce(_+_) / lit("60") as "work"
+    val otherProjection: Column = otherColumns.reduce(_+_) / lit("60") as "other"
+
+
     df
       .select(workingStatusProjection, sexProjection, ageProjection, primaryNeedsProjection, workProjection, otherProjection)
       .where($"telfs" <= 4) // Discard people who are not in labor force
