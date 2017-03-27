@@ -150,11 +150,16 @@ object TimeUsage {
     otherColumns: List[Column],
     df: DataFrame
   ): DataFrame = {
-    val workingStatusProjection: Column = when(col("telfs") < 3, "working")
-      .otherwise("not working") as "working"
-    val sexProjection: Column = when(col("tesex") === 1, "male").otherwise("female") as "sex"
-    val ageProjection: Column = when(col("teage") <= 22, "young")
-    .when(col("teage") <= 55, "active").otherwise("elder")  as "age"
+    val workingStatusProjection: Column =
+      when(col("telfs") < 3, "working")
+        .otherwise("not working") as "working"
+    val sexProjection: Column =
+      when(col("tesex") === 1, "male")
+        .otherwise("female") as "sex"
+    val ageProjection: Column =
+      when(col("teage") <= 22, "young")
+        .when(col("teage") <= 55, "active")
+        .otherwise("elder")  as "age"
 
     val primaryNeedsProjection: Column = primaryNeedsColumns.reduce(_+_) / lit("60") as "primaryNeeds"
     val workProjection: Column = workColumns.reduce(_+_) / lit("60") as "work"
@@ -206,7 +211,15 @@ object TimeUsage {
     * @param viewName Name of the SQL view to use
     */
   def timeUsageGroupedSqlQuery(viewName: String): String =
-    ???
+    "SELECT " +
+      "working, " +
+      "sex, " +
+      "age, " +
+      "ROUND(AVG(primaryNeeds), 1) as primaryNeeds, " +
+      "ROUND(AVG(work), 1) as work, " +
+      "ROUND(AVG(other), 1) as other " +
+      s"FROM $viewName " +
+      "GROUP BY working, sex, age"
 
   /**
     * @return A `Dataset[TimeUsageRow]` from the “untyped” `DataFrame`

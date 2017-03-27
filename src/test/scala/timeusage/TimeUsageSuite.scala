@@ -39,7 +39,7 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
 
     val u = summaryDf.orderBy($"primaryNeeds".desc, $"work".desc, $"other".desc).first()
 
-    assert(u(0) === "working")
+    assert(u(0) === "not working")
     assert(u(1) === "female")
     assert(u(2) === "active")
     assert(u(3) === 24.0)
@@ -52,6 +52,24 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
     val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
     val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
     val finalDf = timeUsageGrouped(summaryDf)
+
+
+    //finalDf.orderBy($"primaryNeeds".desc, $"work".desc, $"other".desc).show()
+    val u = finalDf.orderBy($"primaryNeeds".desc, $"work".desc, $"other".desc).first()
+
+    assert(u(0) === "not working")
+    assert(u(1) === "female")
+    assert(u(2) === "young")
+    assert(u(3) === 12.5)
+    assert(u(4) === 0.2)
+    assert(u(5) === 11.1)
+  }
+
+  test("timeUsageGroupedSql") {
+    val (columns, initDf) = read("/timeusage/atussum.csv")
+    val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
+    val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
+    val finalDf = timeUsageGroupedSql(summaryDf)
 
 
     //finalDf.orderBy($"primaryNeeds".desc, $"work".desc, $"other".desc).show()
