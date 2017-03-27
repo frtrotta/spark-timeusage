@@ -15,7 +15,7 @@ object TimeUsage {
     SparkSession
       .builder()
       .appName("Time Usage")
-      .config("spark.master", "local")
+      .config("spark.master", "local[4]")
       .getOrCreate()
 
   // For implicit conversions like converting RDDs to DataFrames
