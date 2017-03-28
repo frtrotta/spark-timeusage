@@ -215,6 +215,7 @@ object TimeUsage {
         round(avg($"work"), 1) as "work",
         round(avg($"other"), 1) as "other"
       )
+      .orderBy($"working", $"sex", $"age")
   }
 
   /**
@@ -239,7 +240,8 @@ object TimeUsage {
       "ROUND(AVG(work), 1) as work, " +
       "ROUND(AVG(other), 1) as other " +
       s"FROM $viewName " +
-      "GROUP BY working, sex, age"
+      "GROUP BY working, sex, age " +
+      "ORDER BY working, sex, age"
 
   /**
     * @return A `Dataset[TimeUsageRow]` from the “untyped” `DataFrame`
@@ -283,6 +285,7 @@ object TimeUsage {
       .map{ // TODO Do I need to map? Is this the right way?
         case (k, primaryNeeds, work, other) => TimeUsageRow(k._1, k._2, k._3, primaryNeeds, work, other)
       }
+      .orderBy($"working", $"sex", $"age")
   }
 }
 
